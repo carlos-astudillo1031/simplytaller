@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simply TallerX - Software Automotriz</title>
+    <title>Simply Taller - Software Automotriz</title>
     
     <link rel="icon" href="<?= base_url('public/assets/favicon.png') ?>" type="image/x-icon">
     
