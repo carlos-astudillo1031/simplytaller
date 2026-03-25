@@ -90,7 +90,10 @@ class Permisos_Model extends Base_Empresa_Model
             LEFT JOIN permisos p 
                 ON p.id_ruta = r.id 
                 AND p.id_usuario = ?
-            ORDER BY r.orden ASC
+            ORDER BY 
+                COALESCE(r.id_padre, r.id), 
+                r.id_padre IS NOT NULL, 
+                r.orden ASC
         ";
 
         $query = $this->query($sql, [$idUsuario]);

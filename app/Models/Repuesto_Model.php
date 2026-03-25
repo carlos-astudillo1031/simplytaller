@@ -19,6 +19,7 @@ class Repuesto_Model extends Base_Empresa_Model
         'precio',
         'stock',
         'stock_minimo',
+        'id_ubicacion',
     ];
 
     // Timestamps
@@ -27,6 +28,11 @@ class Repuesto_Model extends Base_Empresa_Model
     protected $updatedField  = 'updated_at';
     protected $deletedField  = 'deleted_at';
 
-   
+    public function getRepuestosConUbicacion()
+    {
+        return $this->select('repuesto.*, ubicaciones.nombre AS ubicacion_nombre')
+                    ->join('ubicaciones', 'ubicaciones.id = repuesto.id_ubicacion', 'left')
+                    ->findAll();
+    }
 }
 

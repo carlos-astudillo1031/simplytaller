@@ -340,8 +340,7 @@ class Config extends BaseController
     public function GetRepuestos() {
         if ($this->request->isAJAX()) {
             $model_repuesto = model('Repuesto_Model');
-            $repuestos = $model_repuesto->findAll();
-
+            $repuestos = $model_repuesto->getRepuestosConUbicacion();
             header('Content-Type: application/json');
             echo json_encode($repuestos);
         }
@@ -999,5 +998,75 @@ class Config extends BaseController
         }
     }
 
+    #####################UBICACIONES######################
 
+    // Muestra vista de Ubicaciones
+    public function Ubicaciones(): string {
+        return view('config/ubicaciones'); // Asegúrate que exista
     }
+
+    // Obtiene lista de todas las ubicaciones
+    public function GetUbicaciones() {
+        if ($this->request->isAJAX()) {
+            $model = model('Ubicacion_Model');
+            $ubicaciones = $model->findAll();
+
+            return $this->response->setJSON($ubicaciones);
+        }
+    }
+
+    // Obtiene una ubicación por su ID
+    public function GetRegistroUbicaciones() {
+        if ($this->request->isAJAX()) {
+            $model = model('Ubicacion_Model');
+            $id = $this->request->getPost('id');
+            $ubicacion = $model->find($id);
+
+            return $this->response->setJSON($ubicacion);
+        }
+    }
+
+    // Guarda una nueva ubicación
+    public function GuardarUbicaciones() {
+        if ($this->request->isAJAX()) {
+            $model = model('Ubicacion_Model');
+
+            $data = [
+                'nombre' => $this->request->getPost('nombre')
+            ];
+
+            $model->save($data);
+            return $this->response->setJSON(['success' => true]);
+        }
+    }
+
+    // Actualiza una ubicación existente
+    public function ActualizarUbicaciones() {
+        if ($this->request->isAJAX()) {
+            $model = model('Ubicacion_Model');
+
+            $id = $this->request->getPost('id');
+            $nombre = $this->request->getPost('nombre');
+
+            $data = ['nombre' => $nombre];
+            $model->update($id, $data);
+
+            return $this->response->setJSON(['success' => true]);
+        }
+    }
+
+    // Elimina una ubicación
+    public function EliminarUbicaciones() {
+        if ($this->request->isAJAX()) {
+            $model = model('Ubicacion_Model');
+
+            $id = $this->request->getPost('id');
+            $model->delete($id);
+
+            return $this->response->setJSON(['success' => true, 'id' => $id]);
+        }
+    }
+
+}
+
+

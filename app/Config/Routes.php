@@ -44,6 +44,13 @@ $routes->group('config', ['filter' => 'role'], function ($routes) {
     $routes->post('ActualizarMarca', 'Config::ActualizarMarca');
     $routes->post('EliminarMarca', 'Config::EliminarMarca');
 
+    $routes->get('ubicaciones', 'Config::Ubicaciones');
+    $routes->get('GetUbicaciones', 'Config::GetUbicaciones');
+    $routes->post('GetRegistroUbicaciones', 'Config::GetRegistroUbicaciones');
+    $routes->post('GuardarUbicaciones', 'Config::GuardarUbicaciones');
+    $routes->post('ActualizarUbicaciones', 'Config::ActualizarUbicaciones');
+    $routes->post('EliminarUbicaciones', 'Config::EliminarUbicaciones');
+
     $routes->get('modelos', 'Config::Modelos');
     $routes->get('GetModelosTodos', 'Config::GetModelosTodos');
     $routes->post('GetModelos', 'Config::GetModelos'); 
