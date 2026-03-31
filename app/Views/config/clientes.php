@@ -83,7 +83,7 @@
                                     <label for="rut_cliente">Rut de</label>
                                 </div> -->
                                 <div class="col-md-12 form-group d-flex">
-                                    <select class="form-select" id="select_clientes">
+                                    <select class="form-select select2" id="select_clientes">
                                         <option selected disabled>Buscar Cliente</option>
                                     <!-- Opciones se cargarán vía AJAX -->
                                     </select>                                    

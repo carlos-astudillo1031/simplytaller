@@ -216,8 +216,96 @@ class Orden_Servicio extends BaseController
                 }
             }
 
+            ############DETALLE ANTERIOR#################
+            // 🔹 1. Obtener detalle anterior
+            $detalleAnteriorDB = $modelo_repuesto_orden_servicio
+                ->where('id_orden_servicio', $id_orden_servicio)
+                ->findAll();
+
+            // 🔹 2. Convertir a mapa [id_repuesto => cantidad]
+            $detalleAnterior = [];
+
+            foreach ($detalleAnteriorDB as $item) {
+                $detalleAnterior[$item['id_repuesto']] = $item['cantidad'];
+            }
+
+            ############DETALLE NUEVO#################
+            // 🔹 Construir detalle nuevo como mapa
+            $detalleNuevo = [];
+
+            foreach ($repuestos as $rep) {
+                $id = $rep['id_repuesto'];
+                $cantidad = $rep['cantidad'];
+
+                if (!isset($detalleNuevo[$id])) {
+                    $detalleNuevo[$id] = 0;
+                }
+
+                $detalleNuevo[$id] += $cantidad;
+            }
+
+            ################CALCULAMOS LAS DIFERENCIAS################
+            // 🔹 Unir todos los IDs (anteriores + nuevos)
+            $ids = array_unique(array_merge(
+                array_keys($detalleAnterior),
+                array_keys($detalleNuevo)
+            ));
+
+            // 🔹 Calcular diferencias
+            $diferencias = [];
+
+            foreach ($ids as $id) {
+                $anterior = $detalleAnterior[$id] ?? 0;
+                $nuevo    = $detalleNuevo[$id] ?? 0;
+
+                $diff = $nuevo - $anterior;
+
+                if ($diff != 0) {
+                    $diferencias[] = [
+                        'id_repuesto' => $id,
+                        'diferencia'  => $diff
+                    ];
+                }
+            }
+
+            ################AJUSTAMOS STOCK################
+            // Modelo de ajustes
+            $modelAjustes = new \App\Models\Ajustes_Stock_Model();
+            //Modelo Repuestos
+            $modelRepuesto = new \App\Models\Repuesto_Model();
+
+            // 🔹 Aplicar cambios
+            foreach ($diferencias as $d) {
+
+                $idRepuesto = $d['id_repuesto'];
+                $diff       = $d['diferencia'];
+
+                // 🔹 1. Obtener stock actual (opcional pero recomendado para log)
+                $repuesto = $modelRepuesto->find($idRepuesto);
+
+                $stockActual = $repuesto['stock'];
+                $stockNuevo  = $stockActual - $diff;
+
+                // 🔹 2. Actualizar stock
+                $modelRepuesto->update($idRepuesto, [
+                    'stock' => $stockNuevo
+                ]);
+
+                // 🔹 3. Registrar ajuste
+                $modelAjustes->insert([
+                    'id_repuesto'  => $idRepuesto,
+                    'id_usuario'   => session()->get('id_usuario'),
+                    'stock_actual' => $stockActual,
+                    'stock_nuevo'  => $stockNuevo,
+                    'motivo'       => 'Uso en orden #' . $id_orden_servicio
+                ]);
+            }
+
+            ###############BORRAMOS DETALLE ANTERIOR DE LA TABLA EN BD
             $modelo_repuesto_orden_servicio->where('id_orden_servicio', $id_orden_servicio)->delete();
-            // 🔄 AGREGAMOS los repuestos actuales
+
+
+            ####AGREGAMOS LOS REPUESTOS NUEVOS#################################
             foreach ($repuestos as $rep) {
                 // Obtener la última consulta SQL como string                                                      
                 $okSaveRepuestos = $modelo_repuesto_orden_servicio->insert([
@@ -447,6 +535,43 @@ class Orden_Servicio extends BaseController
             //Copia los repuestos del presupuesto a la tabla de repuestos de la orden de servicio
             $model_repuesto_orden_servicio->copiarDesdePresupuesto($id_presupuesto, $id_orden_servicio);
             log_message('debug', 'Repuestos copiados' );
+
+
+            ######DESCUENTA EL STOCK DE LOS REPUETOS QUE SE VAN A USAR EN LA OS
+            // Modelo repuestos
+            $modelRepuesto = new \App\Models\Repuesto_Model();
+            $modelAjustes = new \App\Models\Ajustes_Stock_Model();
+
+            // Obtener repuestos recién copiados a la OT
+            $repuestosOT = $model_repuesto_orden_servicio
+                ->where('id_orden_servicio', $id_orden_servicio)
+                ->findAll();
+
+            foreach ($repuestosOT as $rep) {
+
+                $idRepuesto = $rep['id_repuesto'];
+                $cantidad   = $rep['cantidad'];
+
+                // 🔹 Obtener stock actual
+                $repuesto = $modelRepuesto->find($idRepuesto);
+
+                $stockActual = $repuesto['stock'];
+                $stockNuevo  = $stockActual - $cantidad;
+
+                // 🔹 Actualizar stock
+                $modelRepuesto->update($idRepuesto, [
+                    'stock' => $stockNuevo
+                ]);
+
+                // 🔹 Registrar ajuste
+                $modelAjustes->insert([
+                    'id_repuesto'  => $idRepuesto,
+                    'id_usuario'   => session()->get('id_usuario'),
+                    'stock_actual' => $stockActual,
+                    'stock_nuevo'  => $stockNuevo,
+                    'motivo'       => 'Traspaso presupuesto #' . $id_presupuesto . ' a OT #' . $id_orden_servicio
+                ]);
+            }
 
             //Borro los servicios de la tabla de servicios de la orden de servicio            
             $model_servicio_orden_servicio->where('id_orden_servicio', $id_orden_servicio)->delete();

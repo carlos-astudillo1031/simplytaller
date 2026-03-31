@@ -34,11 +34,12 @@
                     <thead class="bg-light">
                         <tr>
                             <th width="20%">Codigo</th>
-                            <th width="35%">Nombre del Repuesto</th>
-                            <th width="15%">Precio (CLP)</th>
-                            <th width="10%">Stock</th>
-                            <th width="10%">Stock Mínimo</th>
-                            <th width="15%">Acciones</th>
+                            <th width="30%">Nombre del Repuesto</th>
+                            <th width="10%">Precio (CLP)</th>
+                            <th width="7%">Stock</th>
+                            <th width="7%">Stock Mínimo</th>
+                            <th width="10%">Ubicación</th>  
+                            <th width="26%">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>   
@@ -98,7 +99,7 @@
                                 <label for="stock_repuesto">Stock</label>
                             </div>
                             <div class="col-md-8 form-group">
-                                <input type="number" class="form-control" id="stock_repuesto" placeholder="Ej: 50">
+                                <input type="number" class="form-control"  id="stock_repuesto" placeholder="Ej: 50">
                             </div>
 
                             <div class="col-md-4">
@@ -107,6 +108,14 @@
                             <div class="col-md-8 form-group">
                                 <input type="number" class="form-control" id="stock_minimo" placeholder="Ej: 5">
                             </div>
+
+                            <div class="col-md-4">
+                                <label for="stock_minimo">Ubicación</label>
+                            </div>
+                            <div class="col-md-8 form-group">
+                                <select class="form-select" name="ubicacion_repuesto" id="ubicacion_repuesto"></select>
+                            </div>
+                            
 
                         </div>
                     </div>
@@ -119,6 +128,49 @@
         </div>
     </div>
 </div> <!-- Fin del modal -->
+
+<!-- Modal Ajustar Stock -->
+<div class="modal fade" id="modalAjustarStock" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            
+            <div class="modal-header">
+                <h5 class="modal-title">Ajustar Stock</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="ajuste_id_repuesto">
+
+                <div class="mb-3">
+                    <label class="form-label">Stock actual</label>
+                    <input type="number" id="stock_actual" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Nuevo stock</label>
+                    <input type="number" id="stock_nuevo" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Motivo</label>
+                    <textarea id="motivo" class="form-control" rows="2" placeholder="Ej: ajuste por inventario físico"></textarea>
+                </div>
+
+                <div class="alert alert-info d-none" id="info_diferencia"></div>
+
+            </div>
+
+            <div class="modal-footer" id="modal-footer-ajustar-stock">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-primary" onclick="GuardarAjusteStock()">Guardar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- Fin Modal Ajustar Stock -->
 
 <script src="/public/assets/extensions/datatables.net/js/jquery.dataTables.min.js"></script>
 <script src="/public/assets/extensions/datatables.net-bs5/js/dataTables.bootstrap5.min.js"></script>
@@ -133,9 +185,11 @@ function CrearRepuesto() {
     $('#id_repuesto').val('');
     $('#codigo_repuesto').val('');
     $('#nombre_repuesto').val('');   
-    $('#precio_repuesto').val('');    
-    $('#stock_repuesto').val('');    
+    $('#precio_repuesto').val('');   
+    $('#stock_repuesto').prop('readonly', false); 
+    $('#stock_repuesto').val('');        
     $('#stock_minimo').val('');
+    cargaUbicaciones();
     $('#crear-editar-repuesto').modal('show');
 
     let htmlBotones = '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>' +
@@ -152,6 +206,8 @@ function GuardarRepuesto() {
         ['stock_minimo', 'text']
     ];
 
+    let id_ubicacion_repuesto = $('#ubicacion_repuesto').val() || null;
+
     if(ValidaCamposObligatorios(arrCampos) != false) {
         $.ajax({
             data: { 
@@ -159,7 +215,8 @@ function GuardarRepuesto() {
                 'nombre': $('#nombre_repuesto').val(),
                 'precio': $('#precio_repuesto').val(),
                 'stock': $('#stock_repuesto').val(),
-                'stock_minimo': $('#stock_minimo').val()
+                'stock_minimo': $('#stock_minimo').val(),
+                'id_ubicacion': id_ubicacion_repuesto
             },
             dataType: "json",
             type: "POST",
@@ -185,23 +242,34 @@ function CargaRepuestos() {
         },
         success: function(data) {
             $('#tabla_repuestos').DataTable().destroy();       
-            $("#tabla_repuestos tbody").empty();   
-
+            $("#tabla_repuestos tbody").empty();               
             $.each(data, function(i, item) {
+                let nombre_ubicacion = '-';
                 let claseFila = (parseInt(item.stock) == 0 || parseInt(item.stock) <= parseInt(item.stock_minimo)) ? 'table-danger' : '';
-
-                $("#tabla_repuestos tbody").append(
-                    '<tr id="tr_'+item.id+'" class="'+claseFila+'">' +
-                    '<td>' + item.codigo + '</td>' +
-                    '<td>' + item.nombre + '</td>' +
-                    '<td>' + formatearPrecio(item.precio) + '</td>' +
-                    '<td>' + item.stock + '</td>' +
-                    '<td>' + item.stock_minimo + '</td>' +
-                    '<td class="text-start">' +
-                    '<a class="btn icon btn-success me-1" onclick="EditarRepuesto(' + item.id + ')" href="#" title="Editar"><i class="fas fa-edit"></i></a>' +
-                    '<a class="btn icon btn-danger" onclick="EliminarRepuesto(' + item.id + ')" href="#" title="Eliminar"><i class="fas fa-trash"></i></a>' +
-                    '</td></tr>'
-                );
+                if (item.id_ubicacion != null) {
+                    nombre_ubicacion = item.ubicacion_nombre;
+                }
+                $("#tabla_repuestos tbody").append(`
+                    <tr id="tr_${item.id}" class="${claseFila}">
+                        <td>${item.codigo}</td>
+                        <td>${item.nombre}</td>
+                        <td>${formatearPrecio(item.precio)}</td>
+                        <td>${item.stock}</td>
+                        <td>${item.stock_minimo}</td>
+                        <td>${nombre_ubicacion}</td>
+                        <td class="text-start">
+                            <a class="btn icon btn-primary me-1 btn-sm" onclick="AjustarStock(${item.id})" href="#" title="Ajustar Stock">
+                                <i class="fas fa-sync-alt"></i>
+                            </a>
+                            <a class="btn icon btn-success me-1 btn-sm" onclick="EditarRepuesto(${item.id})" href="#" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a class="btn icon btn-danger btn-sm" onclick="EliminarRepuesto(${item.id})" href="#" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                `);
             });
 
             $('#tabla_repuestos').DataTable({
@@ -220,7 +288,8 @@ $('#nombre_repuesto').on('blur', function () {
     $(this).val(proper);
 });
 
-function EditarRepuesto(id_repuesto) {
+function EditarRepuesto(id_repuesto) {    
+    cargaUbicaciones();    
     $.ajax({
         dataType: "json",
         type: "POST",
@@ -235,8 +304,11 @@ function EditarRepuesto(id_repuesto) {
             $('#codigo_repuesto').val(data.codigo);
             $('#nombre_repuesto').val(data.nombre);   
             $('#precio_repuesto').val(data.precio);   
+            $('#stock_repuesto').prop('readonly', true); 
             $('#stock_repuesto').val(data.stock);
             $('#stock_minimo').val(data.stock_minimo);
+            
+            $('#ubicacion_repuesto').val(data.id_ubicacion);
 
             let htmlBotones = '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>' +
                               '<button type="button" class="btn btn-primary" onclick="UpdateRepuesto(' + data.id + ')" id="confirmEnvioButton">Guardar</button>';
@@ -254,6 +326,8 @@ function UpdateRepuesto(id_repuesto) {
         ['stock_minimo', 'text']
     ];
 
+    let id_ubicacion_repuesto = $('#ubicacion_repuesto').val() || null;
+
     if(ValidaCamposObligatorios(arrCampos) != false) {
         $.ajax({
             data: { 
@@ -262,7 +336,8 @@ function UpdateRepuesto(id_repuesto) {
                 'precio': $('#precio_repuesto').val(),
                 'stock': $('#stock_repuesto').val(),
                 'stock_minimo': $('#stock_minimo').val(),
-                'id_repuesto': id_repuesto
+                'id_repuesto': id_repuesto,
+                'id_ubicacion': id_ubicacion_repuesto
             },
             dataType: "json",
             type: "POST",
@@ -303,5 +378,66 @@ function EliminarRepuesto(id_repuesto) {
             }
         });
     };
+}
+
+function AjustarStock(id_repuesto) {  
+   $.ajax({
+        dataType: "json",
+        type: "POST",
+        data: { 'id_repuesto': id_repuesto },
+        url: "<?= base_url('/public/config/GetRegistroRepuesto') ?>",
+        error: function() {
+            MyAlert('Imposible cargar datos del repuesto','error');
+        },
+        success: function(data) {                  
+            $('#modalAjustarStock').modal('show');                        
+            $('#stock_actual').val(data.stock);     
+            $('#stock_actual').prop('readonly', true);                         
+
+            let htmlBotones = '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>' +
+                              '<button type="button" class="btn btn-primary" onclick="GuardarAjusteStock(' + data.id + ')" id="confirmEnvioButton">Guardar</button>';
+            $('#modal-footer-ajustar-stock').html(htmlBotones);
+        }
+    });
+}
+
+function cargaUbicaciones() {
+    $.ajax({
+        dataType: "json",
+        url: "<?= base_url('/public/config/GetUbicaciones') ?>",
+        success: function(data) {
+            //Limpiamos el select
+            $('#ubicacion_repuesto').empty(); 
+            //Opcion por defecto
+            $('#ubicacion_repuesto').append(`<option value="" selected disabled>Seleccione una ubicación</option>`);
+            $.each(data, function(i, item) {                
+                //Demas opciones                
+                $('#ubicacion_repuesto').append(`
+                    <option value="${item.id}">${item.nombre}</option>
+                `);
+            });
+        }
+    });
+}
+
+function GuardarAjusteStock(id_repuesto) {
+    $.ajax({
+        data: { 'id_repuesto': id_repuesto, 
+        'stock_actual': $('#stock_actual').val(),
+        'stock_nuevo': $('#stock_nuevo').val(),
+        'motivo': $('#motivo').val()
+        },
+        dataType: "json",
+        type: "POST",
+        url: "<?= base_url('/public/config/RegistrarAjusteStockRepuesto') ?>",
+        error: function() {
+            MyAlert('Imposible guardar los datos', 'error');
+        },
+        success: function() {
+            $('#modalAjustarStock').modal('hide');
+            MyAlert('El stock ha sido actualizado con éxito', 'exito');
+            CargaRepuestos();
+        }
+    });
 }
 </script>

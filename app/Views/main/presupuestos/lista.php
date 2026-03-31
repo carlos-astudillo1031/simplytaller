@@ -1046,7 +1046,7 @@ function DesecharPresupuesto(id_presupuesto) {
 
 
 function ConvertirEnOS(id_presupuesto, es_vehiculo){
-    if (!confirm("Se creará o actualizará la Orden de Servicio con este presupuesto. Este proceso no se puede deshacer. ¿Deseas continuar?")) {
+    if (!confirm("Se creará o actualizará la Orden de Servicio con este presupuesto. Si hay repuestos asociados se aplicaran los descuentos de stock correspondiente. Este proceso no se puede deshacer. ¿Deseas continuar?")) {
         return;
     }
 

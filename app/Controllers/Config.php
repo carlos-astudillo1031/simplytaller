@@ -368,13 +368,15 @@ class Config extends BaseController
             $precio = service('request')->getPost('precio');
             $stock = service('request')->getPost('stock');
             $stock_minimo = service('request')->getPost('stock_minimo');
+            $id_ubicacion = service('request')->getPost('id_ubicacion');
 
             $data = [
                 'codigo' => $codigo,
                 'nombre' => $nombre,
                 'precio' => $precio,
                 'stock' => $stock,
-                'stock_minimo' => $stock_minimo
+                'stock_minimo' => $stock_minimo,
+                'id_ubicacion' => $id_ubicacion
             ];
 
             $model_repuesto->save($data);
@@ -393,16 +395,16 @@ class Config extends BaseController
             $id_repuesto = service('request')->getPost('id_repuesto');
             $codigo = service('request')->getPost('codigo');
             $nombre = service('request')->getPost('nombre');
-            $precio = service('request')->getPost('precio');
-            $stock = service('request')->getPost('stock');
+            $precio = service('request')->getPost('precio');            
             $stock_minimo = service('request')->getPost('stock_minimo');
+            $id_ubicacion = service('request')->getPost('id_ubicacion');
 
             $data = [
                 'codigo' => $codigo,
                 'nombre' => $nombre,
-                'precio' => $precio,
-                'stock' => $stock,
-                'stock_minimo' => $stock_minimo
+                'precio' => $precio,                
+                'stock_minimo' => $stock_minimo,
+                'id_ubicacion' => $id_ubicacion
             ];
 
             $model_repuesto->update($id_repuesto, $data);
@@ -428,7 +430,39 @@ class Config extends BaseController
         }
     }
 
+    public function RegistrarAjusteStockRepuesto() {
+        if ($this->request->isAJAX()) {
+            $Ajustes_Stock_Model = model('Ajustes_Stock_Model');
 
+            $id_repuesto = service('request')->getPost('id_repuesto');
+            $stock_actual = service('request')->getPost('stock_actual');
+            $stock_nuevo = service('request')->getPost('stock_nuevo');
+            $motivo = service('request')->getPost('motivo');
+            $id_usuario = $id_usuario =  session()->get('id_usuario');
+
+            //Registro el ajuste de stock
+            $data = [
+                'id_repuesto' => $id_repuesto,
+                'stock_actual' => $stock_actual,
+                'stock_nuevo' => $stock_nuevo,
+                'motivo' => $motivo,
+                'id_usuario' => $id_usuario
+            ];
+            $Ajustes_Stock_Model->save($data);
+
+            //Actualizo stock en repuesto
+            $model_repuesto = model('Repuesto_Model');  
+            $repuesto = $model_repuesto->find($id_repuesto);
+            $data_repuesto = [
+                'stock' => $stock_nuevo
+            ];
+            $model_repuesto->update($id_repuesto, $data_repuesto);
+
+            $response = ['success' => true];
+            header('Content-Type: application/json');
+            echo json_encode($response);
+        }
+    }
 
 
     ##################### VEHICULOS ######################
@@ -1009,7 +1043,9 @@ class Config extends BaseController
     public function GetUbicaciones() {
         if ($this->request->isAJAX()) {
             $model = model('Ubicacion_Model');
-            $ubicaciones = $model->findAll();
+            $ubicaciones = $model
+                    ->orderBy('nombre', 'ASC')
+                    ->findAll();
 
             return $this->response->setJSON($ubicaciones);
         }

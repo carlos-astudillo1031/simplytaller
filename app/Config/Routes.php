@@ -72,6 +72,7 @@ $routes->group('config', ['filter' => 'role'], function ($routes) {
     $routes->post('GuardarRepuesto', 'Config::GuardarRepuesto');
     $routes->post('UpdateRepuesto', 'Config::UpdateRepuesto');
     $routes->post('EliminarRepuesto', 'Config::EliminarRepuesto');
+    $routes->post('RegistrarAjusteStockRepuesto', 'Config::RegistrarAjusteStockRepuesto');
 
     $routes->get('vehiculos', 'Config::Vehiculos');  
     $routes->get('GetVehiculos', 'Config::GetVehiculos');  
