@@ -92,9 +92,12 @@ $routes->group('config', ['filter' => 'role'], function ($routes) {
     $routes->post('EliminarBomba', 'Config::EliminarBomba');
 
 
-    $routes->get('GetMarcas', 'Config::GetMarcas');  
-
-    $routes->post('GetModelos', 'Config::GetModelos');  
+    $routes->get('proveedores', 'Config::Proveedores');
+    $routes->get('GetProveedores', 'Config::GetProveedores');
+    $routes->post('GetUnicoProveedores', 'Config::GetUnicoProveedores');
+    $routes->post('GuardarProveedores', 'Config::GuardarProveedores');
+    $routes->post('ActualizarProveedores', 'Config::ActualizarProveedores');
+    $routes->post('EliminarProveedores', 'Config::EliminarProveedores');
 
 }); 
 

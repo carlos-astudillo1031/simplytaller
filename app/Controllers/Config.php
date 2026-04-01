@@ -328,6 +328,83 @@ class Config extends BaseController
         }
     }
 
+    #####################PROVEEDORES######################
+
+    // Muestra vista de Proveedores
+    public function Proveedores(): string {
+        return view('config/proveedores');
+    }
+
+    // Obtiene lista de todos los proveedores
+    public function GetProveedores() {
+        if ($this->request->isAJAX()) {
+            $model = model('Proveedor_Model');
+            $proveedores = $model->findAll();
+
+            return $this->response->setJSON($proveedores);
+        }
+    }
+
+    // Obtiene un proveedor por su ID
+    public function GetUnicoProveedores() {
+        if ($this->request->isAJAX()) {
+            $model = model('Proveedor_Model');
+            $id = $this->request->getPost('id');
+            $proveedor = $model->find($id);
+
+            return $this->response->setJSON($proveedor);
+        }
+    }
+
+    // Guarda un nuevo proveedor
+    public function GuardarProveedores() {
+        if ($this->request->isAJAX()) {
+            $model = model('Proveedor_Model');
+
+            $data = [
+                'rut'      => $this->request->getPost('rut'),
+                'nombre'   => $this->request->getPost('nombre'),
+                'telefono' => $this->request->getPost('telefono'),
+                'email'    => $this->request->getPost('email')
+            ];
+
+            $model->save($data);
+
+            return $this->response->setJSON(['success' => true]);
+        }
+    }
+
+    // Actualiza un proveedor existente
+    public function ActualizarProveedores() {
+        if ($this->request->isAJAX()) {
+            $model = model('Proveedor_Model');
+
+            $id = $this->request->getPost('id');
+
+            $data = [
+                'rut'      => $this->request->getPost('rut'),
+                'nombre'   => $this->request->getPost('nombre'),
+                'telefono' => $this->request->getPost('telefono'),
+                'email'    => $this->request->getPost('email')
+            ];
+
+            $model->update($id, $data);
+
+            return $this->response->setJSON(['success' => true]);
+        }
+    }
+
+    // Elimina un proveedor
+    public function EliminarProveedores() {
+        if ($this->request->isAJAX()) {
+            $model = model('Proveedor_Model');
+
+            $id = $this->request->getPost('id');
+            $model->delete($id);
+
+            return $this->response->setJSON(['success' => true, 'id' => $id]);
+        }
+    }
 
     ##################### REPUESTOS ######################
 
