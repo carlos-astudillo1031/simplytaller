@@ -155,5 +155,12 @@ $routes->group('agenda', ['filter' => 'role'], function ($routes) {
     $routes->get('/', 'Agenda::index');
 });
  
-
+//Compras
+$routes->group('compra', ['filter' => 'role'], function ($routes) {
+    $routes->get('lista', 'Compra::lista');
+    $routes->get('GetCompras', 'Compra::GetCompras');
+    $routes->post('GetCompraDetalle', 'Compra::GetCompraDetalle');
+    $routes->post('GuardarCompra', 'Compra::GuardarCompra');
+    $routes->post('AnularCompra', 'Compra::AnularCompra');
+});    
 
