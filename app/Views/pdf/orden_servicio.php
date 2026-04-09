@@ -30,7 +30,7 @@
                 <p><strong>Fecha:</strong> <?= $orden_servicio['fecha'] ?? date('d-m-Y') ?></p>
             </td>
             <td style="vertical-align: top; text-align: right; width: 60%; border: none;">                
-                <span><img width="20%" src="data:image/jpeg;base64,<?= base64_encode(file_get_contents(FCPATH . 'assets/img/marambio/logo.jpeg')) ?>" alt=""></span><br>
+                <span><img width="20%" src="data:image/jpeg;base64,<?= base64_encode(file_get_contents(FCPATH . $taller['url_logo'])) ?>" alt=""></span><br>
                 <span><strong><?= esc($taller['razon_social']) ?></strong></span><br>
                 <span><?= esc($taller['direccion']) ?></span><br>
                 <span><?= esc($taller['celular']) ?></span><br>                                
