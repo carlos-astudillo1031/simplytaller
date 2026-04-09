@@ -114,10 +114,10 @@
                     <?php if ($estado_orden < 2): ?>
                         <li><a class="dropdown-item" href="#" onclick="CrearPresupuesto()"><i class="fa fa-file"></i> Crear Presupuesto </a></li>
                     <?php endif; ?>
-                    <?php if ($estado_orden >= 2): ?>
+                    <?php /* if ($estado_orden >= 2): */ ?>
                         <li><a class="dropdown-item" href="#" onclick="CambiaEstado(3)"><i class="fa fa-play"></i> Empezar Trabajo</a></li>
                         <li><a class="dropdown-item" href="#" onclick="CambiaEstado(4)"><i class="fas fa-flag-checkered"></i> Terminar Trabajo </a></li>
-                    <?php endif; ?>
+                    <?php /* endif; */ ?>
                     <li><a class="dropdown-item" href="#" onclick="CambiaEstado(5)"><i class="fa fa-ban"></i> Anular Orden</a> </li>                    
                 <?php endif; ?>    
                 <?php if ($estado_orden == 6): ?>
