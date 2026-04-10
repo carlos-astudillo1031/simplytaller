@@ -109,7 +109,7 @@
             </button>
             <ul class="dropdown-menu" aria-labelledby="accionesDropdown">
                 <?php $estado_orden = esc($orden_servicio['estado']);?>
-                <?php if ($estado_orden < 6 && $permisoId == 1): ?>
+                <?php if ($estado_orden < 6): ?>
                     <li><a class="dropdown-item" href="#" onclick="GuardarCambiosOS()"><i class="fa fa-save"></i> Guardar Cambios</a></li>
                     <?php if ($estado_orden < 2): ?>
                         <li><a class="dropdown-item" href="#" onclick="CrearPresupuesto()"><i class="fa fa-file"></i> Crear Presupuesto </a></li>
@@ -472,7 +472,7 @@
                                             <td>$<?= number_format($servicio['precio'], 0, '', '.');   ?></td>
                                             <td class="total_servicios">$<?= number_format($servicio['precio'] * $servicio['cantidad'], 0, '', '.'); ?></td>
                                             <td>
-                                                <button type="button" <?= ($orden_servicio['estado'] == 6 || $permisoId !=1) ? 'disabled' : '' ?> class="btn btn-danger btn-sm btn-eliminar-servicio">
+                                                <button type="button" <?= ($orden_servicio['estado']  > 3) ? 'disabled' : '' ?> class="btn btn-danger btn-sm btn-eliminar-servicio">
                                                     <i class="fa fa-trash"></i> 
                                                 </button>
                                             </td>
@@ -486,7 +486,7 @@
                         <strong>Subtotal Servicios: $<span id="subtotal_servicios"><?= number_format($subtotal_servicios, 0, '', '.'); ?></span></strong>
                     </div>
                     <div class="card-header d-flex justify-content-end align-items-center fw-bold" style="font-size: 1.2rem;">
-                        <button class="btn btn-primary" <?= ($orden_servicio['estado'] == 6 || $permisoId !=1) ? 'disabled' : '' ?> onclick="agregarServicio()">
+                        <button class="btn btn-primary" <?= ($orden_servicio['estado'] > 3) ? 'disabled' : '' ?> onclick="agregarServicio()">
                             <i class="fa fa-plus"></i> Agregar Servicio
                         </button>
                     </div>
@@ -520,7 +520,7 @@
                                             <td>$<?= number_format($repuesto['precio'], 0, '', '.');   ?></td>
                                             <td class="total">$<?= number_format($repuesto['precio'] * $repuesto['cantidad'], 0, '', '.'); ?></td>
                                             <td>
-                                                <button type="button" <?= ($orden_servicio['estado'] == 6 || $permisoId !=1) ? 'disabled' : '' ?> class="btn btn-danger btn-sm" onclick="eliminarRepuesto(<?= $repuesto['id_repuesto'] ?>)">
+                                                <button type="button" <?= ($orden_servicio['estado'] > 3) ? 'disabled' : '' ?> class="btn btn-danger btn-sm" onclick="eliminarRepuesto(<?= $repuesto['id_repuesto'] ?>)">
                                                     <i class="fa fa-trash"></i> 
                                                 </button>
                                             </td>
@@ -534,7 +534,7 @@
                         <strong>Subtotal Repuestos: <span id="subtotal_repuestos"><?= number_format($subtotal_repuestos, 0, '', '.'); ?></span></strong>
                     </div>
                     <div class="card-header d-flex justify-content-end align-items-center fw-bold" style="font-size: 1.2rem;">                    
-                        <button class="btn btn-primary" <?= ($orden_servicio['estado'] == 6 || $permisoId !=1) ? 'disabled' : '' ?> onclick="agregarRepuesto()">
+                        <button class="btn btn-primary" <?= ($orden_servicio['estado'] > 3) ? 'disabled' : '' ?> onclick="agregarRepuesto()">
                             <i class="fa fa-plus"></i> Agregar Repuesto
                         </button>
                 </div>
