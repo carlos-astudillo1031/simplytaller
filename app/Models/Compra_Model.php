@@ -76,7 +76,8 @@ class Compra_Model extends Base_Empresa_Model
                         dc.id_repuesto,
                         dc.cantidad,
                         dc.precio_unitario,
-                        r.nombre AS repuesto
+                        r.nombre AS repuesto,
+                        r.codigo
                     ")
                     ->join('repuesto r', 'r.id = dc.id_repuesto')
                     ->where('dc.id_compra', $id_compra)

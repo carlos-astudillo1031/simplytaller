@@ -54,4 +54,36 @@ class Venta_Model extends Base_Empresa_Model
         return $builder->orderBy('ventas.created_at', 'DESC')
                     ->findAll();
     }
+
+    public function getVentaConDetalle($id_venta)
+    {
+        // 🔹 Obtener cabecera de la venta
+        $venta = $this->select("
+                        ventas.*,
+                        clientes.nombre_cliente AS cliente,
+                        DATE_FORMAT(ventas.created_at, '%d-%m-%Y') AS fecha_formateada
+                    ")
+                    ->join('cliente clientes', 'clientes.id_cliente = ventas.id_cliente', 'left')
+                    ->where('ventas.id', $id_venta)
+                    ->first();
+
+        // 🔹 Obtener detalle de la venta
+        $detalle = $this->db->table('detalle_venta dv')
+                    ->select("
+                        dv.id_repuesto,
+                        dv.cantidad,
+                        dv.precio_unitario,
+                        r.nombre AS repuesto,
+                        r.codigo
+                    ")
+                    ->join('repuesto r', 'r.id = dv.id_repuesto')
+                    ->where('dv.id_venta', $id_venta)
+                    ->get()
+                    ->getResult();
+
+        return [
+            'venta'   => $venta,
+            'detalle' => $detalle
+        ];
+    }
 }

@@ -135,7 +135,7 @@
                     <!-- Precio -->
                     <div class="col-md-3">
                         <label class="form-label">Precio Unitario</label>
-                        <input type="number" id="precio_input" class="form-control text-end" value="0">
+                        <input type="number" id="precio_input" disabled class="form-control text-end" value="0">
                     </div>
 
                     <!-- Botón agregar -->
@@ -302,7 +302,7 @@ function VerVenta(id_venta, estado) {
 
                 $("#detalle_venta_body").append(`
                     <tr>
-                        <td>${item.repuesto}</td>
+                        <td>${item.repuesto}(${item.codigo})</td>
                         <td class="text-center">${item.cantidad}</td>
                         <td class="text-end">${formatearPrecio(item.precio_unitario)}</td>
                         <td class="text-end">${formatearPrecio(subtotal)}</td>
@@ -539,6 +539,87 @@ function AnularVenta() {
     );
 }
 
+function agregarFilaDetalleVenta() {
+
+    const repuestoSelect = $('#repuesto_input');
+    const repuestoId = repuestoSelect.val();
+    const repuestoTexto = repuestoSelect.find("option:selected").text();
+
+    const cantidad = parseFloat($('#cantidad_input').val()) || 0;
+    const precio = parseFloat($('#precio_input').val()) || 0;
+
+    // 🔴 Validaciones básicas
+    if (!repuestoId) {
+        MyAlert('Debe seleccionar un repuesto', 'warning');
+        return;
+    }
+
+    if (cantidad <= 0) {
+        MyAlert('Cantidad inválida', 'warning');
+        return;
+    }
+
+    if (precio < 0) {
+        MyAlert('Precio inválido', 'warning');
+        return;
+    }
+
+    const subtotal = cantidad * precio;
+
+    // Crear fila
+    const fila = `
+        <tr data-id="${repuestoId}">
+            <td>${repuestoTexto}</td>
+            <td class="text-center">${cantidad}</td>
+            <td class="text-end">${formatearPrecio(precio)}</td>
+            <td class="text-end">${formatearPrecio(subtotal)}</td>
+            <td class="text-center">
+                <button class="btn btn-danger btn-sm" onclick="eliminarFilaVenta(this)">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `;
+
+    $("#detalle_venta_body").append(fila);
+
+    // Limpiar inputs
+    $('#repuesto_input').val(null).trigger('change');
+    $('#cantidad_input').val(1);
+    $('#precio_input').val(0);
+
+    // Recalcular totales
+    recalcularTotalesVenta();
+}
+
+function recalcularTotalesVenta() {
+
+    let neto = 0;
+
+    $("#detalle_venta_body tr").each(function () {
+
+        const cantidad = parseFloat($(this).find("td:eq(1)").text()) || 0;
+
+        // Quitar símbolo $ y separadores de miles
+        const precioTexto = $(this)
+            .find("td:eq(2)")
+            .text()
+            .replace(/\$/g, '')
+            .replace(/\./g, '');
+
+        const precio = parseFloat(precioTexto) || 0;
+
+        neto += cantidad * precio;
+    });
+
+    const iva = Math.round(neto * 0.19);
+    const total = neto + iva;
+
+    $("#total_neto_venta").text(formatearPrecio(neto));
+    $("#total_iva_venta").text(formatearPrecio(iva));
+    $("#total_total_venta").text(formatearPrecio(total));
+}
+
 function FiltrarVentas() {
 
     let inicio = $('#fecha_inicio').val();
@@ -550,6 +631,35 @@ function FiltrarVentas() {
     }
 
     CargaVentas(inicio, fin);
+}
+
+$('#repuesto_input').on('change', function() {
+    // Obtener la opción seleccionada
+    let selectedOption = $(this).find('option:selected');
+
+    // Obtener el precio desde el atributo data-precio
+    let precio = selectedOption.data('precio');
+
+    // Asignar el precio al input
+    $('#precio_input').val(precio);
+});
+
+function eliminarFilaVenta(btn) {
+    $(btn).closest("tr").remove();
+    recalcularTotalesVenta();
+}
+
+function limpiarNumero(valor) {
+
+    if (!valor) return 0;
+
+    return parseFloat(
+        valor
+            .toString()
+            .replace(/\$/g, '')   // quitar $
+            .replace(/\./g, '')   // quitar separadores de miles
+            .replace(/,/g, '.')   // por si viene con coma decimal
+    ) || 0;
 }
 
 </script>

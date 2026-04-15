@@ -309,7 +309,7 @@ function VerCompra(id_compra,estado) {
 
                 $("#detalle_compra_body").append(`
                     <tr>
-                        <td>${item.repuesto}</td>
+                        <td>${item.repuesto}(${item.codigo})</td>
                         <td class="text-center">${item.cantidad}</td>
                         <td class="text-end">${formatearPrecio(item.precio_unitario)}</td>
                         <td class="text-end">${formatearPrecio(subtotal)}</td>
