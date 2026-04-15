@@ -164,3 +164,11 @@ $routes->group('compra', ['filter' => 'role'], function ($routes) {
     $routes->post('AnularCompra', 'Compra::AnularCompra');
 });    
 
+// Ventas
+$routes->group('venta', ['filter' => 'role'], function ($routes) {
+    $routes->get('lista', 'Venta::lista');
+    $routes->get('GetVentas', 'Venta::GetVentas');
+    $routes->post('GetVentaDetalle', 'Venta::GetVentaDetalle');
+    $routes->post('GuardarVenta', 'Venta::GuardarVenta');
+    $routes->post('AnularVenta', 'Venta::AnularVenta');
+});

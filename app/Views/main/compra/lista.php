@@ -36,8 +36,8 @@
                             <i class="fas fa-search"></i>
                         </button>
 
-                        <button class="btn btn-primary" onclick="NuevaCompra()">
-                            <i class="fas fa-plus"></i> 
+                        <button class="btn btn-primary text-nowrap" onclick="NuevaCompra()">
+                            <i class="fas fa-plus"></i> Nueva Compra
                         </button>
 
                     </div>
@@ -373,10 +373,11 @@ function modoCrear() {
     // 🔹 Textos ocultos
     $("#proveedor_text, #fecha_text, #factura_text").addClass("d-none");
 
-    // 🔹 Acciones visibles
+    // 🔹 Acciones visibles / No Visibles
     $("#col_acciones").removeClass("d-none");
     $("#btn_agregar_container").removeClass("d-none");
     $("#btn_guardar_compra").removeClass("d-none");
+    $("#btn_anular_compra").addClass("d-none");
 
     // mostrar formulario de ítem
     $("#form_agregar_item").removeClass("d-none");
