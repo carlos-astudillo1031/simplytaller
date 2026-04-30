@@ -89,6 +89,19 @@
             </tr>        
         </table>
     <? endif; ?>
+    
+    <? if($orden_servicio['motivo'] != null):?>    
+        <div class="section-title">Motivo</div>    
+            <p style="border: 1px solid #000; padding: 5px"><?= $orden_servicio['motivo'] ?? '' ?></p>
+        </div>
+    <? endif; ?>
+
+    <? if($orden_servicio['diagnostico'] != null):?>   
+        <div class="section-title">Diágnostico</div>    
+            <p style="border: 1px solid #000; padding: 5px"><?= $orden_servicio['diagnostico'] ?? '' ?></p>
+        </div>
+    <? endif; ?>
+
     <? if($orden_servicio['servicios'] != null):?>    
     <div class="section-title">Servicios</div>
     <table>
