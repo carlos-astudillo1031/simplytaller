@@ -808,6 +808,7 @@
                         // Inicializa o actualiza Select2 después de cargar las opciones
                         $('#select_clientes').select2({
                             theme: 'bootstrap-5',
+                            width: '100%',
                             dropdownParent: $('#crear-editar-registro')
                         });
                     }                   

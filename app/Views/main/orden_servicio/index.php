@@ -469,8 +469,15 @@
                                         <tr data-id-servicio="<?= $servicio['id_servicio'] ?>">    
                                             <td><?= $servicio['nombre'] ?></td>
                                             <td class="cantidad_servicio"><?= $servicio['cantidad'] ?></td>
-                                            <td>$<?= number_format($servicio['precio'], 0, '', '.');   ?></td>
-                                            <td class="total_servicios">$<?= number_format($servicio['precio'] * $servicio['cantidad'], 0, '', '.'); ?></td>
+                                            <td data-precio="<?= esc($servicio['precio']) ?>">
+                                                $<?= number_format($servicio['precio'], 0, '', '.'); ?>
+                                            </td>
+                                            <td
+                                                class="total_servicios"
+                                                data-total="<?= esc($servicio['precio'] * $servicio['cantidad']) ?>"
+                                            >
+                                                $<?= number_format($servicio['precio'] * $servicio['cantidad'], 0, '', '.'); ?>
+                                            </td>
                                             <td>
                                                 <button type="button" <?= ($orden_servicio['estado']  > 3) ? 'disabled' : '' ?> class="btn btn-danger btn-sm btn-eliminar-servicio">
                                                     <i class="fa fa-trash"></i> 
@@ -483,7 +490,7 @@
                         </table>
                     </div>
                     <div class="text-end">
-                        <strong>Subtotal Servicios: $<span id="subtotal_servicios"><?= number_format($subtotal_servicios, 0, '', '.'); ?></span></strong>
+                        <strong>Subtotal Servicios: <span id="subtotal_servicios"><?= number_format($subtotal_servicios, 0, '', '.'); ?></span></strong>
                     </div>
                     <div class="card-header d-flex justify-content-end align-items-center fw-bold" style="font-size: 1.2rem;">
                         <button class="btn btn-primary" <?= ($orden_servicio['estado'] > 3) ? 'disabled' : '' ?> onclick="agregarServicio()">
@@ -517,8 +524,15 @@
                                         <tr data-id="<?= $repuesto['id_repuesto'] ?>">
                                             <td><?= $repuesto['nombre'] ?><?= '('. $repuesto['codigo'] . ')' ?></td>
                                             <td class="cantidad"><?= $repuesto['cantidad'] ?></td>
-                                            <td>$<?= number_format($repuesto['precio'], 0, '', '.');   ?></td>
-                                            <td class="total">$<?= number_format($repuesto['precio'] * $repuesto['cantidad'], 0, '', '.'); ?></td>
+                                            <td data-precio="<?= esc($repuesto['precio']) ?>">
+                                                $<?= number_format($repuesto['precio'], 0, '', '.'); ?>
+                                            </td>
+                                            <td
+                                                class="total"
+                                                data-total="<?= esc($repuesto['precio'] * $repuesto['cantidad']) ?>"
+                                            >
+                                                $<?= number_format($repuesto['precio'] * $repuesto['cantidad'], 0, '', '.'); ?>
+                                            </td>
                                             <td>
                                                 <button type="button" <?= ($orden_servicio['estado'] > 3) ? 'disabled' : '' ?> class="btn btn-danger btn-sm" onclick="eliminarRepuesto(<?= $repuesto['id_repuesto'] ?>)">
                                                     <i class="fa fa-trash"></i> 
@@ -1056,8 +1070,12 @@ function confirmarAgregarServicio() {
         <tr data-id-servicio="${idServicio}">
             <td>${nombreServicio}</td>
             <td class="cantidad_servicio">${cantidad}</td>
-            <td>$${precioServicio.toLocaleString()}</td>
-            <td class="total_servicios">$${total.toLocaleString()}</td>
+            <td data-precio="${precioServicio}">
+                ${formatearPrecio(precioServicio)}
+            </td>
+            <td class="total_servicios" data-total="${total}">
+                ${formatearPrecio(total)}
+            </td>
             <td>
                 <button class="btn btn-danger btn-sm btn-eliminar-servicio" type="button" title="Eliminar">
                     <i class="fas fa-trash"></i>
@@ -1078,14 +1096,13 @@ function confirmarAgregarServicio() {
 // Función para actualizar subtotal servicios
 function actualizarSubtotalServicios() {
     let subtotal = 0;
+
     $('#tabla_servicios tbody tr').each(function() {
-        /* const totalText = $(this).find('td:nth-child(3)').text().replace(/\$|\./g, ''); */
-        let totalText = $(this).find('.total_servicios').text().trim().replace(/\$|\./g, '');   
-        const precio = parseFloat(totalText) || 0;        
-        subtotal += precio;
-    });    
-    $('#subtotal_servicios').text(subtotal.toLocaleString());
-    actualizarResumenTotales()
+        subtotal += Number($(this).find('.total_servicios').attr('data-total')) || 0;
+    });
+
+    $('#subtotal_servicios').text(formatearPrecio(subtotal));
+    actualizarResumenTotales();
 }
 
 
@@ -1182,17 +1199,26 @@ function confirmarAgregarRepuesto() {
 
         // Siempre usar el precio unitario del repuesto (puede ser que en UI se cambie, pero preferible mantener original)
         let nuevoTotal = nuevaCant * precioUnitario;
-        filaExistente.find('.total').text(nuevoTotal.toLocaleString());
+        filaExistente.find('td:nth-child(3)').attr('data-precio', precioUnitario);
+        filaExistente.find('.total')
+            .attr('data-total', nuevoTotal)
+            .text(formatearPrecio(nuevoTotal));
     } else {
         // Agregar fila nueva con formateo consistente
         $('#tabla_repuestos tbody').append(`
             <tr data-id="${idRepuesto}">
                 <td>${nombreRepuesto}</td>
                 <td class="cantidad">${cantidad}</td>
-                <td>${formatearPrecio(precioUnitario)}</td>
-                <td class="total">${formatearPrecio(total)}</td>
+                <td data-precio="${precioUnitario}">
+                    ${formatearPrecio(precioUnitario)}
+                </td>
+                <td class="total" data-total="${total}">
+                    ${formatearPrecio(total)}
+                </td>
                 <td>
-                    <button class="btn btn-danger btn-sm" onclick="eliminarRepuesto('${idRepuesto}')"><i class="fa fa-trash"></i></button>
+                    <button class="btn btn-danger btn-sm" onclick="eliminarRepuesto('${idRepuesto}')">
+                        <i class="fa fa-trash"></i>
+                    </button>
                 </td>
             </tr>
         `);
@@ -1212,50 +1238,39 @@ function eliminarRepuesto(idRepuesto) {
 // Función para actualizar subtotal de repuestos
 function actualizarSubtotalRepuestos() {
     let subtotal = 0;
+
     $('#tabla_repuestos tbody tr').each(function() {
-        let totalText = $(this).find('.total').text().trim();
-
-        // Limpiar texto: solo números, punto y coma (en caso decimal)
-        totalText = totalText.replace(/[^0-9.,-]/g, '');
-
-        // Detectar y normalizar formato decimal
-        if (totalText.indexOf(',') > -1 && totalText.indexOf('.') === -1) {
-            // Caso coma decimal: reemplazar por punto para parseFloat
-            totalText = totalText.replace(',', '.');
-        } else {
-            // Eliminar puntos y comas usados como miles
-            totalText = totalText.replace(/[.,]/g, '');
-        }
-
-        let total = parseFloat(totalText) || 0;
-        subtotal += total;
+        subtotal += Number($(this).find('.total').attr('data-total')) || 0;
     });
 
     $('#subtotal_repuestos').text(formatearPrecio(subtotal));
-    actualizarResumenTotales()
+    actualizarResumenTotales();
 }
 
 
 function actualizarResumenTotales() {
-    // Obtener subtotales como números (removiendo formato)
-    let subtotalServiciosText = $('#subtotal_servicios').text().replace(/[^0-9.,]/g, '').replace(/\./g, '').replace(',', '.');
-    let subtotalRepuestosText = $('#subtotal_repuestos').text().replace(/[^0-9.,]/g, '').replace(/\./g, '').replace(',', '.');
+    let subtotalServicios = 0;
+    let subtotalRepuestos = 0;
 
-    let subtotalServicios = parseFloat(subtotalServiciosText) || 0;
-    let subtotalRepuestos = parseFloat(subtotalRepuestosText) || 0;
+    $('#tabla_servicios tbody tr').each(function() {
+        subtotalServicios += Number($(this).find('.total_servicios').attr('data-total')) || 0;
+    });
 
-    // Calcular total general
-    let totalGeneral = subtotalServicios + subtotalRepuestos;
+    $('#tabla_repuestos tbody tr').each(function() {
+        subtotalRepuestos += Number($(this).find('.total').attr('data-total')) || 0;
+    });
 
+    const totalGeneral = subtotalServicios + subtotalRepuestos;
+    const totalFinal = totalGeneral * 1.19;
+    const iva = totalFinal - totalGeneral;
 
+    $('#subtotal_servicios').text(formatearPrecio(subtotalServicios));
+    $('#subtotal_repuestos').text(formatearPrecio(subtotalRepuestos));
 
-    // Actualizar la UI con formato de miles y moneda
     $('#resumen_servicios').text(formatearPrecio(subtotalServicios));
     $('#resumen_repuestos').text(formatearPrecio(subtotalRepuestos));
     $('#total_general').text(formatearPrecio(totalGeneral));
-    let total_final = totalGeneral * 1.19;
-    $('#total_final').text(formatearPrecio(total_final));
-    let iva = total_final - totalGeneral;
+    $('#total_final').text(formatearPrecio(totalFinal));
     $('#iva').text(formatearPrecio(iva));
 }
 
@@ -1364,8 +1379,7 @@ function GuardarCambiosOS(){
     $('#tabla_servicios tbody tr').each(function() {
         const id_servicio = $(this).data('idServicio'); // aquí está el cambio
         const cantidad = parseInt($(this).find('.cantidad_servicio').text()) || 0;
-        const precioText = $(this).find('td:nth-child(3)').text().replace(/\$|,/g, '');        
-        const precio = parseFloat(precioText.replace(/\./g, '')) || 0;
+        const precio = Number($(this).find('td:nth-child(3)').attr('data-precio')) || 0;
 
         if (id_servicio) {
             servicios.push({ id_servicio, cantidad ,precio });
@@ -1378,8 +1392,7 @@ function GuardarCambiosOS(){
     $('#tabla_repuestos tbody tr').each(function() {
         const id_repuesto = $(this).data('id'); // idem, en <tr data-id="X">
         const cantidad = parseInt($(this).find('.cantidad').text()) || 0;
-        const precioText = $(this).find('td:nth-child(3)').text().replace(/\$|,/g, '');
-        const precio = parseFloat(precioText.replace(/\./g, '')) || 0;
+        const precio = Number($(this).find('td:nth-child(3)').attr('data-precio')) || 0;
         if(id_repuesto) {
             repuestos.push({ id_repuesto, cantidad, precio });
         }
@@ -1430,8 +1443,7 @@ function CrearPresupuesto(){
         $('#tabla_servicios tbody tr').each(function() {
             const id_servicio = $(this).data('idServicio');
             const cantidad = parseInt($(this).find('.cantidad_servicio').text()) || 0;
-            const precioText = $(this).find('td:nth-child(3)').text().replace(/\$|,/g, '');        
-            const precio = parseFloat(precioText.replace(/\./g, '')) || 0;
+            const precio = Number($(this).find('td:nth-child(3)').attr('data-precio')) || 0;
 
             if (id_servicio) {
                 servicios.push({ id_servicio, cantidad ,precio });
@@ -1443,8 +1455,7 @@ function CrearPresupuesto(){
         $('#tabla_repuestos tbody tr').each(function() {
             const id_repuesto = $(this).data('id');
             const cantidad = parseInt($(this).find('.cantidad').text()) || 0;
-            const precioText = $(this).find('td:nth-child(3)').text().replace(/\$|,/g, '');
-            const precio = parseFloat(precioText.replace(/\./g, '')) || 0;
+            const precio = Number($(this).find('td:nth-child(3)').attr('data-precio')) || 0;
             if(id_repuesto) {
                 repuestos.push({ id_repuesto, cantidad, precio });
             }

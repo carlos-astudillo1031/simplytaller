@@ -386,11 +386,12 @@ $(document).on('change', '#select_servicio', function() {
     $('#precio_servicio').val(precio);
 });
 
+
 function confirmarAgregarServicio() {
     const idServicio = $('#select_servicio').val();
-    const nombreServicio = $('#select_servicio option:selected').text();    
-    let cantidad = parseInt($('#cantidad_servicio').val()) || 1;
-    const precioServicio = parseFloat($('#precio_servicio').val());
+    const nombreServicio = $('#select_servicio option:selected').text();
+    const cantidad = parseInt($('#cantidad_servicio').val(), 10) || 1;
+    const precioServicio = Number($('#precio_servicio').val());
 
     if (!idServicio) {
         MyAlert('Por favor, selecciona un servicio', 'error');
@@ -402,29 +403,31 @@ function confirmarAgregarServicio() {
         return;
     }
 
-    if (isNaN(precioServicio) || precioServicio <= 0) {
+    if (!Number.isFinite(precioServicio) || precioServicio <= 0) {
         MyAlert('Precio inválido', 'error');
         return;
     }
 
-    // Verificar si el servicio ya fue agregado para evitar duplicados
     if ($('#tabla_servicios tbody tr[data-id-servicio="' + idServicio + '"]').length > 0) {
         MyAlert('Este servicio ya fue agregado', 'error');
         return;
     }
 
-    // Calcular total
-    let total = cantidad * precioServicio;
+    const total = cantidad * precioServicio;
 
-    // Crear nueva fila en la tabla
     const nuevaFila = `
         <tr data-id-servicio="${idServicio}">
             <td>${nombreServicio}</td>
             <td class="cantidad_servicio">${cantidad}</td>
-            <td>$${precioServicio.toLocaleString()}</td>
-            <td class="total_servicios">$${total.toLocaleString()}</td>
+            <td data-precio="${precioServicio}">
+                ${formatearPrecio(precioServicio)}
+            </td>
+            <td class="total_servicios" data-total="${total}">
+                ${formatearPrecio(total)}
+            </td>
             <td>
-                <button class="btn btn-danger btn-sm btn-eliminar-servicio" type="button" title="Eliminar">
+                <button class="btn btn-danger btn-sm btn-eliminar-servicio"
+                    type="button" title="Eliminar">
                     <i class="fas fa-trash"></i>
                 </button>
             </td>
@@ -433,25 +436,32 @@ function confirmarAgregarServicio() {
 
     $('#tabla_servicios tbody').append(nuevaFila);
 
-    // Actualizar subtotal
     actualizarSubtotalServicios();
-
-    // Cerrar modal
     $('#modal-agregar-servicio').modal('hide');
 }
+
 
 // Función para actualizar subtotal servicios
 function actualizarSubtotalServicios() {
     let subtotal = 0;
+
     $('#tabla_servicios tbody tr').each(function() {
-        /* const totalText = $(this).find('td:nth-child(3)').text().replace(/\$|\./g, ''); */
-        let totalText = $(this).find('.total_servicios').text().trim().replace(/\$|\./g, '');   
-        const precio = parseFloat(totalText) || 0;        
-        subtotal += precio;
-    });    
-    $('#subtotal_servicios').text(subtotal.toLocaleString());
-    actualizarResumenTotales()
+        const total = Number(
+            $(this).find('.total_servicios').attr('data-total')
+        );
+
+        if (Number.isFinite(total)) {
+            subtotal += total;
+        }
+    });
+
+    $('#subtotal_servicios')
+        .data('valor', subtotal)
+        .text(formatearPrecio(subtotal));
+
+    actualizarResumenTotales();
 }
+
 
 
 // Evento para eliminar servicio desde la tabla
@@ -515,49 +525,67 @@ function agregarRepuesto() {
 }
 
 // Confirmar agregar repuesto a la tabla
+
 function confirmarAgregarRepuesto() {
-    let idRepuesto = $('#select_repuesto').val();
-    let nombreRepuesto = $('#select_repuesto option:selected').text();
-    let cantidad = parseInt($('#cantidad_repuesto').val()) || 1;
-    let precioUnitario = parseFloat($('#precio_unitario_repuesto').val()) || 0;
+    const idRepuesto = $('#select_repuesto').val();
+    const nombreRepuesto = $('#select_repuesto option:selected').text();
+    const cantidad = parseInt($('#cantidad_repuesto').val(), 10) || 1;
+    const precioUnitario = Number($('#precio_unitario_repuesto').val());
 
     if (!idRepuesto) {
         MyAlert('Debe seleccionar un repuesto', 'error');
         return;
     }
+
     if (cantidad <= 0) {
         MyAlert('La cantidad debe ser mayor a cero', 'error');
         return;
     }
-    if (precioUnitario <= 0) {
+
+    if (!Number.isFinite(precioUnitario) || precioUnitario <= 0) {
         MyAlert('El precio unitario debe ser mayor a cero', 'error');
         return;
     }
 
-    // Calcular total
-    let total = cantidad * precioUnitario;
+    const filaExistente = $(
+        `#tabla_repuestos tbody tr[data-id="${idRepuesto}"]`
+    );
 
-    // Buscar fila existente por data-id
-    let filaExistente = $(`#tabla_repuestos tbody tr[data-id="${idRepuesto}"]`);
     if (filaExistente.length > 0) {
-        // Sumar cantidades y actualizar total
-        let cantActual = parseInt(filaExistente.find('.cantidad').text());
-        let nuevaCant = cantActual + cantidad;
-        filaExistente.find('.cantidad').text(nuevaCant);
+        const cantActual = parseInt(
+            filaExistente.find('.cantidad').text(), 10
+        ) || 0;
 
-        // Siempre usar el precio unitario del repuesto (puede ser que en UI se cambie, pero preferible mantener original)
-        let nuevoTotal = nuevaCant * precioUnitario;
-        filaExistente.find('.total').text(nuevoTotal.toLocaleString());
+        const nuevaCant = cantActual + cantidad;
+        const nuevoTotal = nuevaCant * precioUnitario;
+
+        filaExistente.find('.cantidad').text(nuevaCant);
+        filaExistente.find('td:nth-child(3)')
+            .attr('data-precio', precioUnitario)
+            .text(formatearPrecio(precioUnitario));
+
+        filaExistente.find('.total')
+            .attr('data-total', nuevoTotal)
+            .text(formatearPrecio(nuevoTotal));
+
     } else {
-        // Agregar fila nueva con formateo consistente
+        const total = cantidad * precioUnitario;
+
         $('#tabla_repuestos tbody').append(`
             <tr data-id="${idRepuesto}">
                 <td>${nombreRepuesto}</td>
                 <td class="cantidad">${cantidad}</td>
-                <td>${formatearPrecio(precioUnitario)}</td>
-                <td class="total">${formatearPrecio(total)}</td>
+                <td data-precio="${precioUnitario}">
+                    ${formatearPrecio(precioUnitario)}
+                </td>
+                <td class="total" data-total="${total}">
+                    ${formatearPrecio(total)}
+                </td>
                 <td>
-                    <button class="btn btn-danger btn-sm" onclick="eliminarRepuesto('${idRepuesto}')"><i class="fa fa-trash"></i></button>
+                    <button class="btn btn-danger btn-sm"
+                        onclick="eliminarRepuesto('${idRepuesto}')">
+                        <i class="fa fa-trash"></i>
+                    </button>
                 </td>
             </tr>
         `);
@@ -567,6 +595,7 @@ function confirmarAgregarRepuesto() {
     $('#crear-editar-repuesto').modal('hide');
 }
 
+
 // Función para eliminar repuesto de la tabla
 function eliminarRepuesto(idRepuesto) {
     $(`#tabla_repuestos tbody tr[data-id="${idRepuesto}"]`).remove();
@@ -575,53 +604,45 @@ function eliminarRepuesto(idRepuesto) {
 }
 
 // Función para actualizar subtotal de repuestos
+
 function actualizarSubtotalRepuestos() {
     let subtotal = 0;
+
     $('#tabla_repuestos tbody tr').each(function() {
-        let totalText = $(this).find('.total').text().trim();
+        const total = Number($(this).find('.total').attr('data-total'));
 
-        // Limpiar texto: solo números, punto y coma (en caso decimal)
-        totalText = totalText.replace(/[^0-9.,-]/g, '');
-
-        // Detectar y normalizar formato decimal
-        if (totalText.indexOf(',') > -1 && totalText.indexOf('.') === -1) {
-            // Caso coma decimal: reemplazar por punto para parseFloat
-            totalText = totalText.replace(',', '.');
-        } else {
-            // Eliminar puntos y comas usados como miles
-            totalText = totalText.replace(/[.,]/g, '');
+        if (Number.isFinite(total)) {
+            subtotal += total;
         }
-
-        let total = parseFloat(totalText) || 0;
-        subtotal += total;
     });
 
-    $('#subtotal_repuestos').text(formatearPrecio(subtotal));
-    actualizarResumenTotales()
+    $('#subtotal_repuestos')
+        .data('valor', subtotal)
+        .text(formatearPrecio(subtotal));
+
+    actualizarResumenTotales();
 }
 
+
+
 function actualizarResumenTotales() {
-    // Obtener subtotales como números (removiendo formato)
-    let subtotalServiciosText = $('#subtotal_servicios').text().replace(/[^0-9.,]/g, '').replace(/\./g, '').replace(',', '.');
-    let subtotalRepuestosText = $('#subtotal_repuestos').text().replace(/[^0-9.,]/g, '').replace(/\./g, '').replace(',', '.');
+    const subtotalServicios =
+        Number($('#subtotal_servicios').data('valor')) || 0;
 
-    let subtotalServicios = parseFloat(subtotalServiciosText) || 0;
-    let subtotalRepuestos = parseFloat(subtotalRepuestosText) || 0;
+    const subtotalRepuestos =
+        Number($('#subtotal_repuestos').data('valor')) || 0;
 
-    // Calcular total general
-    let totalGeneral = subtotalServicios + subtotalRepuestos;
+    const totalGeneral = subtotalServicios + subtotalRepuestos;
+    const totalFinal = totalGeneral * 1.19;
+    const iva = totalFinal - totalGeneral;
 
-
-
-    // Actualizar la UI con formato de miles y moneda
     $('#resumen_servicios').text(formatearPrecio(subtotalServicios));
     $('#resumen_repuestos').text(formatearPrecio(subtotalRepuestos));
     $('#total_general').text(formatearPrecio(totalGeneral));
-    let total_final = totalGeneral * 1.19;
-    $('#total_final').text(formatearPrecio(total_final));
-    let iva = total_final - totalGeneral;
+    $('#total_final').text(formatearPrecio(totalFinal));
     $('#iva').text(formatearPrecio(iva));
 }
+
 
 function limpiarNumero(texto) {
   // Quita todo lo que no sea dígito, coma o punto
@@ -672,8 +693,7 @@ function guardarPresupuestoCompleto() {
     $('#tabla_servicios tbody tr').each(function() {
         const id_servicio = $(this).data('idServicio'); // aquí está el cambio
         const cantidad = parseInt($(this).find('.cantidad_servicio').text()) || 0;
-        const precioText = $(this).find('td:nth-child(3)').text().replace(/\$|,/g, '');        
-        const precio = parseFloat(precioText.replace(/\./g, '')) || 0;
+        const precio = Number($(this).find('td:nth-child(3)').attr('data-precio'));
 
         if (id_servicio) {
             servicios.push({ id_servicio, cantidad ,precio });
@@ -686,8 +706,7 @@ function guardarPresupuestoCompleto() {
     $('#tabla_repuestos tbody tr').each(function() {
         const id_repuesto = $(this).data('id'); // idem, en <tr data-id="X">
         const cantidad = parseInt($(this).find('.cantidad').text()) || 0;
-        const precioText = $(this).find('td:nth-child(3)').text().replace(/\$|,/g, '');
-        const precio = parseFloat(precioText.replace(/\./g, '')) || 0;
+        const precio = Number($(this).find('td:nth-child(3)').attr('data-precio'));
         if(id_repuesto) {
             repuestos.push({ id_repuesto, cantidad, precio });
         }
